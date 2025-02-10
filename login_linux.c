@@ -18,9 +18,14 @@
 #define FALSE 0
 #define LENGTH 16
 
-void set_failed(mypwent *passwddata, int failed);
+void holup() {
+	printf("\nStop here criminal entity!\n");
+}
 
 void sighandler() {
+	signal(SIGINT, holup);
+	signal(SIGTSTP, holup);
+	signal(SIGQUIT, holup);
 
 	/* add signalhandling routines here */
 	/* see 'man 2 signal' */
@@ -37,6 +42,8 @@ int main(int argc, char *argv[]) {
 	char user[LENGTH];
 
 	char important2[LENGTH] = "**IMPORTANT 2**";
+
+	char *hashed_pass;
 
 	//char   *c_pass; //you might want to use this variable later...
 	char prompt[] = "password: ";
@@ -73,28 +80,32 @@ int main(int argc, char *argv[]) {
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
 
-			char *hashed_pass = crypt(user_pass, passwddata->passwd);
+			if(passwddata->pwfailed < 3) {
+				hashed_pass = crypt(user_pass, passwddata->passwd);
 
-			if (hashed_pass != NULL && strcmp(hashed_pass, passwddata->passwd) == 0) {
+				if (hashed_pass != NULL && strcmp(hashed_pass, passwddata->passwd) == 0) {
 
-				printf(" You're in !\n");
+					printf(" You're in !\n");
 
-				printf("Failed login attempts: %d\n", passwddata->pwfailed);
-                passwddata->pwfailed = 0;
-				passwddata->pwage++;
-				mysetpwent(passwddata->pwname, passwddata);
+					printf("Failed login attempts: %d\n", passwddata->pwfailed);
+					passwddata->pwfailed = 0;
+					passwddata->pwage++;
+					mysetpwent(passwddata->pwname, passwddata);
 
-				if(passwddata->pwage > 10) {
-					printf("Password age exceeded 10, pleae change password! \n");
+					if(passwddata->pwage > 10) {
+						printf("Password age exceeded 10, pleae change password! \n");
+					}
+					/*  check UID, see setuid(2) */
+					/*  start a shell, use execve(2) */
+
+				
+				} else {
+					printf("Login Incorrect\n");
+					passwddata->pwfailed++;  
+					mysetpwent(passwddata->pwname, passwddata);
 				}
-				/*  check UID, see setuid(2) */
-				/*  start a shell, use execve(2) */
-
-			
 			} else {
-				printf("Login Incorrect\n");
-                passwddata->pwfailed++;  
-                mysetpwent(passwddata->pwname, passwddata);
+				printf("Too many failed login attempts, try again later! \n");
 			}
 		}else {
             printf("Login Incorrect\n");
