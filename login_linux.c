@@ -12,11 +12,13 @@
 #include <sys/types.h>
 #include <crypt.h>
 /* Uncomment next line in step 2 */
-/* #include "pwent.h" */
+#include "pwent.h"
 
 #define TRUE 1
 #define FALSE 0
 #define LENGTH 16
+
+void set_failed(mypwent *passwddata, int failed);
 
 void sighandler() {
 
@@ -26,7 +28,8 @@ void sighandler() {
 
 int main(int argc, char *argv[]) {
 
-	struct passwd *passwddata; /* this has to be redefined in step 2 */
+	//struct passwd *passwddata; /* this has to be redefined in step 2 */
+	mypwent *passwddata;
 	/* see pwent.h */
 
 	char important1[LENGTH] = "**IMPORTANT 1**";
@@ -52,7 +55,7 @@ int main(int argc, char *argv[]) {
 		fflush(NULL); /* Flush all  output buffers */
 		__fpurge(stdin); /* Purge any data in stdin buffer */
 
-		if (gets(user) == NULL) /* gets() is vulnerable to buffer */
+		if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
 			exit(0); /*  overflow attacks.  */
 
 		/* check to see if important variable is intact after input of login name - do not remove */
@@ -61,25 +64,45 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 		 		LENGTH - 1, LENGTH - 1, important2);
 
+		user[strcspn(user, "\n")] = '\0'; 
+
 		user_pass = getpass(prompt);
-		passwddata = getpwnam(user);
+		passwddata = mygetpwnam(user);
 
 		if (passwddata != NULL) {
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
 
-			//crypt(passwddata, );
+			char *hashed_pass = crypt(user_pass, passwddata->passwd);
 
-			if (!strcmp(user_pass, passwddata->pw_passwd)) {
+			if (hashed_pass != NULL && strcmp(hashed_pass, passwddata->passwd) == 0) {
 
 				printf(" You're in !\n");
 
+				printf("Failed login attempts: %d\n", passwddata->pwfailed);
+                passwddata->pwfailed = 0;
+				passwddata->pwage++;
+				mysetpwent(passwddata->pwname, passwddata);
+
+				if(passwddata->pwage > 10) {
+					printf("Password age exceeded 10, pleae change password! \n");
+				}
 				/*  check UID, see setuid(2) */
 				/*  start a shell, use execve(2) */
 
+			
+			} else {
+				printf("Login Incorrect\n");
+                passwddata->pwfailed++;  
+                mysetpwent(passwddata->pwname, passwddata);
 			}
-		}
-		printf("Login Incorrect \n");
+		}else {
+            printf("Login Incorrect\n");
+        }
 	}
 	return 0;
+}
+
+void set_failed(mypwent *passwddata, int failed) {
+
 }
