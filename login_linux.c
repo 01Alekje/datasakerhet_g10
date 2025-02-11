@@ -83,9 +83,10 @@ int main(int argc, char *argv[]) {
 		if (passwddata != NULL) {
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
+			
 
 			if(passwddata->pwfailed < 3) {
-				hashed_pass = crypt(user_pass, passwddata->passwd);
+				hashed_pass = crypt(user_pass, passwddata->passwd_salt);
 
 				if (hashed_pass != NULL && strcmp(hashed_pass, passwddata->passwd) == 0) {
 
