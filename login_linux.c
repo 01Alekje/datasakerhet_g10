@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 		if (passwddata != NULL) {
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
-			
+
 
 			if(passwddata->pwfailed < 3) {
 				hashed_pass = crypt(user_pass, passwddata->passwd_salt);
@@ -140,7 +140,7 @@ void update_pwd(char *username[]) {
 
 	if (strcmp(new_pwd, repeat_pwd) == 0) {
 		mypwent *passwddata;
-		char *hashed_pass = crypt(new_pwd, passwddata->passwd);
+		char *hashed_pass = crypt(new_pwd, passwddata->passwd_salt);
 
 		passwddata = mygetpwnam(username);
 		passwddata->passwd = hashed_pass;
