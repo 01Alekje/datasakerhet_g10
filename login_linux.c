@@ -18,6 +18,8 @@
 #define FALSE 0
 #define LENGTH 16
 
+extern char **environ;
+
 void holup() {
 	printf("\nStop here criminal entity!\n");
 }
@@ -71,7 +73,8 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 		 		LENGTH - 1, LENGTH - 1, important2);
 
-		user[strcspn(user, "\n")] = '\0'; 
+		// replace \n with \0
+		user[strcspn(user, "\n")] = '\0';
 
 		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
@@ -96,9 +99,14 @@ int main(int argc, char *argv[]) {
 						printf("Password age exceeded 10, pleae change password! \n");
 					}
 					/*  check UID, see setuid(2) */
+					if (setuid(passwddata->uid) == -1) {
+						printf("could not set it little ...");
+						return 0;
+					}
 					/*  start a shell, use execve(2) */
+					char *argv[] = { "sh", "-i", NULL };
+					execve("/bin/sh", argv, environ);
 
-				
 				} else {
 					printf("Login Incorrect\n");
 					passwddata->pwfailed++;  
