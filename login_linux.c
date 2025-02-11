@@ -33,6 +33,8 @@ void sighandler() {
 	/* see 'man 2 signal' */
 }
 
+void update_pwd();
+
 int main(int argc, char *argv[]) {
 
 	//struct passwd *passwddata; /* this has to be redefined in step 2 */
@@ -73,7 +75,6 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 		 		LENGTH - 1, LENGTH - 1, important2);
 
-		// replace \n with \0
 		user[strcspn(user, "\n")] = '\0';
 
 		user_pass = getpass(prompt);
@@ -97,7 +98,14 @@ int main(int argc, char *argv[]) {
 
 					if(passwddata->pwage > 10) {
 						printf("Password age exceeded 10, pleae change password! \n");
+						printf("Do you want to change your password? [y/n]");
+						char answer = getchar();
+						printf("%c\n", answer);
+						if (answer == 'y') {
+							update_pwd(passwddata->pwname);
+						}
 					}
+
 					/*  check UID, see setuid(2) */
 					if (setuid(passwddata->uid) == -1) {
 						printf("could not set it little ...");
@@ -115,13 +123,31 @@ int main(int argc, char *argv[]) {
 			} else {
 				printf("Too many failed login attempts, try again later! \n");
 			}
-		}else {
+		} else {
             printf("Login Incorrect\n");
         }
 	}
 	return 0;
 }
 
-void set_failed(mypwent *passwddata, int failed) {
+void update_pwd(char *username[]) {
+	char *new_pwd;
+	char *repeat_pwd;
 
+	new_pwd = getpass("Enter new password: ");
+	repeat_pwd = getpass("Enter new password: ");
+
+	if (strcmp(new_pwd, repeat_pwd) == 0) {
+		mypwent *passwddata;
+		char *hashed_pass = crypt(new_pwd, passwddata->passwd);
+
+		passwddata = mygetpwnam(username);
+		passwddata->passwd = hashed_pass;
+		passwddata->pwage = 0;
+		mysetpwent(username, passwddata);
+		return 0;
+	}
+
+	printf("Passwords don't match!");
+	return 0;
 }
