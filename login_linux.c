@@ -73,19 +73,18 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important 1' after input of login name: %*.*s\n",
 				LENGTH - 1, LENGTH - 1, important1);
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
-		 		LENGTH - 1, LENGTH - 1, important2);
+				LENGTH - 1, LENGTH - 1, important2);
 
 		user[strcspn(user, "\n")] = '\0';
 
 		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
 
-		if (passwddata != NULL) {
-			/* You have to encrypt user_pass for this to work */
-			/* Don't forget to include the salt */
+		if(passwddata->pwfailed < 4) {
+			if (passwddata != NULL) {
+				/* You have to encrypt user_pass for this to work */
+				/* Don't forget to include the salt */
 
-
-			if(passwddata->pwfailed < 3) {
 				hashed_pass = crypt(user_pass, passwddata->passwd_salt);
 
 				if (hashed_pass != NULL && strcmp(hashed_pass, passwddata->passwd) == 0) {
@@ -100,8 +99,8 @@ int main(int argc, char *argv[]) {
 					if(passwddata->pwage > 10) {
 						printf("Password age exceeded 10, pleae change password! \n");
 						printf("Do you want to change your password? [y/n]");
+
 						char answer = getchar();
-						printf("%c\n", answer);
 						if (answer == 'y') {
 							update_pwd(passwddata->pwname);
 						}
@@ -122,33 +121,42 @@ int main(int argc, char *argv[]) {
 					mysetpwent(passwddata->pwname, passwddata);
 				}
 			} else {
-				printf("Too many failed login attempts, try again later! \n");
+				printf("Login Incorrect\n");
 			}
 		} else {
-            printf("Login Incorrect\n");
-        }
+			printf("Too many failed login attempts! You done fucked up!");
+		}
 	}
 	return 0;
 }
 
-void update_pwd(char *username[]) {
-	char *new_pwd;
-	char *repeat_pwd;
+void update_pwd(char *username) {
+    char *new_pwd;
+    char *repeat_pwd;
+    char *temp_pwd;
 
-	new_pwd = getpass("Enter new password: ");
-	repeat_pwd = getpass("Enter new password: ");
+    new_pwd = getpass("Enter new password: ");
 
-	if (strcmp(new_pwd, repeat_pwd) == 0) {
-		mypwent *passwddata;
-		char *hashed_pass = crypt(new_pwd, passwddata->passwd_salt);
+	// new_pwd seems to be somehow overwritten by secondary getpass()
+    temp_pwd = strdup(new_pwd);
 
-		passwddata = mygetpwnam(username);
-		passwddata->passwd = hashed_pass;
-		passwddata->pwage = 0;
-		mysetpwent(username, passwddata);
-		return 0;
-	}
+    repeat_pwd = getpass("Repeat new password: ");
 
-	printf("Passwords don't match!");
-	return 0;
+    if (strcmp(temp_pwd, repeat_pwd) == 0) {
+        mypwent *passwddata = mygetpwnam(username);
+
+        char *hashed_pass = crypt(temp_pwd, passwddata->passwd_salt);
+
+        passwddata->passwd = hashed_pass;
+        passwddata->pwage = 0;
+        mysetpwent(username, passwddata);
+
+        printf("Password updated!\n");
+    } else {
+        printf("Passwords don't match!\n");
+    }
+    
+    free(new_pwd);
+	free(repeat_pwd);
+    free(temp_pwd);
 }
