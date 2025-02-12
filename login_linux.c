@@ -18,7 +18,7 @@
 #define FALSE 0
 #define LENGTH 16
 
-extern char **environ;
+char **environ;
 
 void holup() {
 	printf("\nStop here criminal entity!\n");
@@ -81,8 +81,9 @@ int main(int argc, char *argv[]) {
 		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
 
-		// check if too many failed attempts
-		if(passwddata->pwfailed < 4) {
+		if (passwddata == NULL) {
+			printf("No matching user was found!\n");
+		} else if (passwddata->pwfailed < 4) {
 
 			if (passwddata != NULL) {
 				/* You have to encrypt user_pass for this to work */
