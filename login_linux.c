@@ -93,14 +93,15 @@ int main(int argc, char *argv[]) {
 				if (hashed_pass != NULL && strcmp(hashed_pass, passwddata->passwd) == 0) {
 
 					printf(" You're in !\n");
-
 					printf("Failed login attempts: %d\n", passwddata->pwfailed);
+
+					// reset failed login attempts on successful login
 					passwddata->pwfailed = 0;
 					passwddata->pwage++;
 					mysetpwent(passwddata->pwname, passwddata);
 
 					if(passwddata->pwage > 10) {
-						printf("Password age exceeded 10, pleae change password! \n");
+						printf("Password age exceeded 10, please change password! \n");
 						printf("Do you want to change your password? [y/n]");
 
 						char answer = getchar();
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
 
 					/*  check UID, see setuid(2) */
 					if (setuid(passwddata->uid) == -1) {
-						printf("could not set it little ...");
+						printf("Could not set UID, something is wrong!");
 						return 0;
 					}
 					/*  start a shell, use execve(2) */
@@ -124,10 +125,12 @@ int main(int argc, char *argv[]) {
 					mysetpwent(passwddata->pwname, passwddata);
 				}
 			} else {
-				printf("Login Incorrect\n");
+				// login credentials incorrect
+				printf("Login Incorrect!\n");
 			}
 		} else {
-			printf("Too many failed login attempts! You done fucked up!");
+			// this user cannot be logged in, too many failed attempts
+			printf("Too many failed login attempts!");
 		}
 	}
 	return 0;
