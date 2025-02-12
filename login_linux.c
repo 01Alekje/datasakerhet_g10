@@ -75,12 +75,15 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 				LENGTH - 1, LENGTH - 1, important2);
 
+		// replace \n with \0
 		user[strcspn(user, "\n")] = '\0';
 
 		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
 
+		// check if too many failed attempts
 		if(passwddata->pwfailed < 4) {
+
 			if (passwddata != NULL) {
 				/* You have to encrypt user_pass for this to work */
 				/* Don't forget to include the salt */
